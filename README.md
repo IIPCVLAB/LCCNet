@@ -77,6 +77,9 @@ python evaluate_calib.py
 ```
 
 ## Train
+```commandline
+python train_with_sacred.py
+```
 
 ## Citation
 
