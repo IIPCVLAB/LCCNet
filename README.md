@@ -60,11 +60,11 @@ python train_with_sacred.py
  
 Thank you for citing our paper if you use any of this code or datasets.
 ```
-@article{lv2021cfnet,
-  title={CFNet: LiDAR-Camera Registration Using Calibration Flow Network},
-  author={Lv, Xudong and Wang, Boya and Dou, Ziwen and Ye, Dong and Wang, Shuo},
-  journal={arXiv preprint arXiv:2104.11907},
-  year={2021}
+@article{lv2020lidar,
+  title={Lidar and Camera Self-Calibration using CostVolume Network},
+  author={Lv, Xudong and Wang, Boya and Ye, Dong and Wang, Shuo},
+  journal={arXiv preprint arXiv:2012.13901},
+  year={2020}
 }
 ```
 
