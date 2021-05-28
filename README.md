@@ -7,7 +7,7 @@ Multi-sensor fusion is for enhancing environment perception and 3D reconstructio
 ## Table of Contents
 
 - [Requirements](#Requirements)
-- [Pre-trained model](#Pre-trained model)
+- [Pre-trained_model](#Pre-trained_model)
 - [Evaluation](#Evaluation)
 - [Train](#Train)
 - [Citation](#Citation)
@@ -24,7 +24,7 @@ Multi-sensor fusion is for enhancing environment perception and 3D reconstructio
 pip install -r requirements.txt
 ```
 
-## Pre-trained model
+## Pre-trained_model
 
 Pre-trained models can be downloaded from [google drive](https://drive.google.com/drive/folders/1Z6aOqyW1VyzbYW2X7aDOPf3ue_AIlJFB?usp=sharing)
 
