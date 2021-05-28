@@ -7,7 +7,7 @@ Multi-sensor fusion is for enhancing environment perception and 3D reconstructio
 ## Table of Contents
 
 - [Requirements](#Requirements)
-- [Pre-trained_model](#Pre-trained_model)
+- [Pre-trained model](#Pre-trained_model)
 - [Evaluation](#Evaluation)
 - [Train](#Train)
 - [Citation](#Citation)
