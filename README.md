@@ -1,12 +1,5 @@
 # LCCNet
 
-![banner]()
-
-![badge]()
-![badge]()
-[![license](https://img.shields.io/github/license/:user/:repo.svg)](LICENSE)
-[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-
 Official PyTorch implementation of the paper “LCCNet: Lidar and Camera Self-Calibration Using Cost Volume Network”.
 
 Multi-sensor fusion is for enhancing environment perception and 3D reconstruction in self-driving and robot navigation. Calibration between sensors is the precondition of effective multi-sensor fusion. Laborious manual works and complex environment settings exist in old-fashioned calibration techniques for Light Detection and Ranging (LiDAR) and camera. We propose an online LiDAR-Camera Self-calibration Network (LCCNet), different from the previous CNN-based methods. LCCNet can be trained end-to-end and predict the extrinsic parameters in real-time. In the LCCNet, we exploit the cost volume layer to express the correlation between the features of the RGB image and the depth image projected from point clouds. Besides using the smooth L1-Loss of the predicted extrinsic calibration parameters as a supervised signal, an additional self-supervised signal, point cloud distance loss, is applied during training. Instead of directly regressing the extrinsic parameters, we predict the deviation from initial calibration to the ground truth. The calibration error decreases further with iterative refinement and the temporal filtering approach in the inference stage. The execution time of the calibration process is 24ms for each iteration on a single GPU. LCCNet achieves a mean absolute calibration error of 0.297cm in translation and 0.017° in rotation with miscalibration magnitudes of up to ±1.5m and ±20° on the KITTI-odometry dataset, which is better than the state-of-the-art CNN-based calibration methods.
@@ -14,26 +7,13 @@ Multi-sensor fusion is for enhancing environment perception and 3D reconstructio
 ## Table of Contents
 
 - [Introduction](#Introduction)
-  - [Contribution](#Contribution)
-  - [Approach overview](#Approach overview)
-  - [Main results](#Main results)
 - [Requirements](#Requirements)
 - [Pre-trained model](#Pre-trained model)
-- [Quick test](#Quick test)
-- [Dataset prepare](#Dataset prepare)
 - [Evaluation](#Evaluation)
 - [Train](#Train)
 - [Citation](#Citation)
-- [Contact](#Contact)
-- [License](#license)
 
-## Introduction
 
-### Contribution
-
-### Approach overview
-
-### Main results
 
 ## Requirements
 
@@ -48,10 +28,6 @@ pip install -r requirements.txt
 ## Pre-trained model
 
 Pre-trained models can be downloaded from [google drive](https://drive.google.com/drive/folders/1Z6aOqyW1VyzbYW2X7aDOPf3ue_AIlJFB?usp=sharing)
-
-## Quick test
-
-## Dataset prepare
 
 ## Evaluation
 
@@ -82,41 +58,15 @@ python train_with_sacred.py
 ```
 
 ## Citation
-
-## Install
-
-This module depends upon a knowledge of [Markdown]().
-
+ 
+Thank you for citing our paper if you use any of this code or datasets.
 ```
-```
-
-### Any optional sections
-
-## Usage
-
-```
+@article{lv2021cfnet,
+  title={CFNet: LiDAR-Camera Registration Using Calibration Flow Network},
+  author={Lv, Xudong and Wang, Boya and Dou, Ziwen and Ye, Dong and Wang, Shuo},
+  journal={arXiv preprint arXiv:2104.11907},
+  year={2021}
+}
 ```
 
-Note: The `license` badge image link at the top of this file should be updated with the correct `:user` and `:repo`.
-
-### Any optional sections
-
-## API
-
-### Any optional sections
-
-## More optional sections
-
-## Contact
-
-See [the contributing file](CONTRIBUTING.md)!
-
-PRs accepted.
-
-Small note: If editing the Readme, please conform to the [standard-readme](https://github.com/RichardLitt/standard-readme) specification.
-
-### Any optional sections
-
-## License
-
-[MIT © Richard McRichface.](../LICENSE)
+---
