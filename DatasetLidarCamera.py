@@ -23,16 +23,6 @@ from torchvision import transforms
 from utils import invert_pose, rotate_forward, quaternion_from_matrix, read_calib_file
 from pykitti import odometry
 import pykitti
-#
-# def get_calib_kitti_odom(sequence):
-#     if sequence == 0:
-#         return torch.tensor([[718.856, 0, 607.1928], [0, 718.856, 185.2157], [0, 0, 1]])
-#     elif sequence == 3:
-#         return torch.tensor([[721.5377, 0, 609.5593], [0, 721.5377, 172.854], [0, 0, 1]])
-#     elif sequence in [5, 6, 7, 8, 9]:
-#         return torch.tensor([[707.0912, 0, 601.8873], [0, 707.0912, 183.1104], [0, 0, 1]])
-#     else:
-#         raise TypeError("Sequence Not Available")
 
 
 class DatasetLidarCameraKittiOdometry(Dataset):
