@@ -28,6 +28,7 @@ from tqdm import tqdm
 import time
 
 from models.LCCNet import LCCNet
+from DatasetLidarCamera import DatasetLidarCameraKittiOdometry
 
 from quaternion_distances import quaternion_distance
 from utils import (mat2xyzrpy, merge_inputs, overlay_imgs, quat2mat,
@@ -42,179 +43,6 @@ from math import radians
 from utils import invert_pose
 from torchvision import transforms
 
-class DatasetTest(Dataset):
-
-    def __init__(self, dataset_dir, transform=None, augmentation=False, use_reflectance=False,
-                 max_t=1.5, max_r=20., split='random', device='cpu', test_sequence='00', est='rot'):
-        super(DatasetTest, self).__init__()
-        self.use_reflectance = use_reflectance
-        self.maps_folder = ''
-        self.device = device
-        self.max_r = max_r
-        self.max_t = max_t
-        self.augmentation = augmentation
-        self.root_dir = dataset_dir
-        self.transform = transform
-        self.split = split
-        self.GTs_R = {}
-        self.GTs_T = {}
-        self.GTs_T_cam02_velo = {}
-        self.K = {}
-
-        self.all_files = []
-
-        seq = test_sequence
-        odom = odometry(self.root_dir, seq)
-        calib = odom.calib
-        T_cam02_velo_np = calib.T_cam2_velo #gt pose from cam02 to velo_lidar (T_cam02_velo: 4x4)
-        self.K[seq] = calib.K_cam2 # 3x3
-        T_cam02_velo = torch.from_numpy(T_cam02_velo_np)
-        GT_R = quaternion_from_matrix(T_cam02_velo[:3, :3])
-        GT_T = T_cam02_velo[3:, :3]
-        self.GTs_R[seq] = GT_R # GT_R = np.array([row['qw'], row['qx'], row['qy'], row['qz']])
-        self.GTs_T[seq] = GT_T # GT_T = np.array([row['x'], row['y'], row['z']])
-        self.GTs_T_cam02_velo[seq] = T_cam02_velo_np #gt pose from cam02 to velo_lidar (T_cam02_velo: 4x4)
-
-        image_list = os.listdir(os.path.join(dataset_dir, 'sequences', seq, 'image_2'))
-        image_list.sort()
-
-        for image_name in image_list:
-            if not os.path.exists(os.path.join(dataset_dir, 'sequences', seq, 'velodyne',
-                                               str(image_name.split('.')[0])+'.bin')):
-                continue
-            if not os.path.exists(os.path.join(dataset_dir, 'sequences', seq, 'image_2',
-                                               str(image_name.split('.')[0])+'.png')):
-                continue
-            self.all_files.append(os.path.join(seq, image_name.split('.')[0]))
-
-        self.test_RT = []
-        if split == 'random':
-            test_RT_file = os.path.join(dataset_dir, 'sequences',
-                                       f'test_RT_seq{test_sequence}_{max_r:.2f}_{max_t:.2f}.csv')
-            if os.path.exists(test_RT_file):
-                print(f'TEST SET: Using this file: {test_RT_file}')
-                df_test_RT = pd.read_csv(test_RT_file, sep=',')
-                for index, row in df_test_RT.iterrows():
-                    self.test_RT.append(list(row))
-            else:
-                print(f'TEST SET - Not found: {test_RT_file}')
-                print("Generating a new one")
-                test_RT_file = open(test_RT_file, 'w')
-                test_RT_file = csv.writer(test_RT_file, delimiter=',')
-                test_RT_file.writerow(['id', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz'])
-                for i in range(len(self.all_files)):
-                    rotz = np.random.uniform(-max_r, max_r) * (3.141592 / 180.0)
-                    roty = np.random.uniform(-max_r, max_r) * (3.141592 / 180.0)
-                    rotx = np.random.uniform(-max_r, max_r) * (3.141592 / 180.0)
-                    transl_x = np.random.uniform(-max_t, max_t)
-                    transl_y = np.random.uniform(-max_t, max_t)
-                    # transl_z = np.random.uniform(-max_t, max_t)
-                    transl_z = np.random.uniform(-max_t, min(max_t, 1.))
-                    test_RT_file.writerow([i, transl_x, transl_y, transl_z,
-                                           rotx, roty, rotz])
-                    self.test_RT.append([float(i), transl_x, transl_y, transl_z,
-                                         rotx, roty, rotz])
-
-            assert len(self.test_RT) == len(self.all_files), "Something wrong with test RTs"
-        elif split == 'constant':
-            for i in range(len(self.all_files)):
-                if est == 'rot':
-                    rotz = np.random.uniform(-max_r, max_r) * (3.141592 / 180.0)
-                    roty = np.random.uniform(-max_r, max_r) * (3.141592 / 180.0)
-                    rotx = np.random.uniform(-max_r, max_r) * (3.141592 / 180.0)
-                    transl_x = max_t
-                    transl_y = max_t
-                    transl_z = max_t
-                elif est == 'tran':
-                    rotz = max_r * (3.141592 / 180.0)
-                    roty = max_r * (3.141592 / 180.0)
-                    rotx = max_r * (3.141592 / 180.0)
-                    transl_x = np.random.uniform(-max_t, max_t)
-                    transl_y = np.random.uniform(-max_t, max_t)
-                    transl_z = np.random.uniform(-max_t, max_t)
-                # transl_z = np.random.uniform(-max_t, min(max_t, 1.))
-                self.test_RT.append([i, transl_x, transl_y, transl_z,
-                                     rotx, roty, rotz])
-
-    def get_ground_truth_poses(self, sequence, frame):
-        return self.GTs_T[sequence][frame], self.GTs_R[sequence][frame]
-
-    def custom_transform(self, rgb):
-        to_tensor = transforms.ToTensor()
-        normalization = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                             std=[0.229, 0.224, 0.225])
-
-        rgb = to_tensor(rgb)
-        rgb = normalization(rgb)
-        return rgb
-
-    def __len__(self):
-        return len(self.all_files)
-
-    def __getitem__(self, idx):
-        item = self.all_files[idx]
-        seq = str(item.split('/')[0])
-        rgb_name = str(item.split('/')[1])
-        img_path = os.path.join(self.root_dir, 'sequences', seq, 'image_2', rgb_name+'.png')
-        lidar_path = os.path.join(self.root_dir, 'sequences', seq, 'velodyne', rgb_name+'.bin')
-        lidar_scan = np.fromfile(lidar_path, dtype=np.float32)
-        pc = lidar_scan.reshape((-1, 4))
-        valid_indices = pc[:, 0] < -3.
-        valid_indices = valid_indices | (pc[:, 0] > 3.)
-        valid_indices = valid_indices | (pc[:, 1] < -3.)
-        valid_indices = valid_indices | (pc[:, 1] > 3.)
-        pc = pc[valid_indices].copy()
-        if self.use_reflectance:
-            reflectance = pc[:, 3].copy()
-            reflectance = torch.from_numpy(reflectance).float()
-
-        RT = self.GTs_T_cam02_velo[seq].astype(np.float32)
-
-        pc_rot = np.matmul(RT, pc.T)
-        pc_rot = pc_rot.astype(np.float).T.copy()
-        pc_in = torch.from_numpy(pc_rot.astype(np.float32))#.float()
-
-        if pc_in.shape[1] == 4 or pc_in.shape[1] == 3:
-            pc_in = pc_in.t()
-        if pc_in.shape[0] == 3:
-            homogeneous = torch.ones(pc_in.shape[1]).unsqueeze(0)
-            pc_in = torch.cat((pc_in, homogeneous), 0)
-        elif pc_in.shape[0] == 4:
-            if not torch.all(pc_in[3,:] == 1.):
-                pc_in[3,:] = 1.
-        else:
-            raise TypeError("Wrong PointCloud shape")
-
-        img = Image.open(img_path)
-
-        try:
-            img = self.custom_transform(img)
-        except OSError:
-            new_idx = np.random.randint(0, self.__len__())
-            return self.__getitem__(new_idx)
-
-
-        initial_RT = self.test_RT[idx]
-        rotz = initial_RT[6]
-        roty = initial_RT[5]
-        rotx = initial_RT[4]
-        transl_x = initial_RT[1]
-        transl_y = initial_RT[2]
-        transl_z = initial_RT[3]
-
-        R = mathutils.Euler((rotx, roty, rotz), 'XYZ')
-        T = mathutils.Vector((transl_x, transl_y, transl_z))
-
-        R, T = invert_pose(R, T)
-        R, T = torch.tensor(R), torch.tensor(T)
-        calib = self.K[seq]
-
-        sample = {'rgb': img, 'point_cloud': pc_in, 'calib': calib,
-                  'tr_error': T, 'rot_error': R, 'seq': int(seq), 'img_path': img_path,
-                  'rgb_name': rgb_name + '.png', 'item': item, 'extrin': RT,
-                  'initial_RT': initial_RT}
-
-        return sample
 
 # import matplotlib
 # matplotlib.rc("font",family='AR PL UMing CN')
@@ -319,8 +147,8 @@ def main(_config, seed):
     if _config['iterative_method'] == 'single':
         weights = [weights[0]]
 
-    # dataset_class = DatasetLidarCameraKittiOdometry
-    dataset_class = DatasetTest
+    dataset_class = DatasetLidarCameraKittiOdometry
+    # dataset_class = DatasetTest
     img_shape = (384, 1280)
     input_size = (256, 512)
 
@@ -949,5 +777,4 @@ def main(_config, seed):
     avg_time = total_time / len(TestImgLoader)
     print("average runing time on {} iteration: {} s".format(len(weights), avg_time))
     print("End!")
-
 
