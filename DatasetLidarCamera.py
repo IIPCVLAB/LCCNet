@@ -107,8 +107,8 @@ class DatasetLidarCameraKittiOdometry(Dataset):
                     # transl_z = np.random.uniform(-max_t, min(max_t, 1.))
                     val_RT_file.writerow([i, transl_x, transl_y, transl_z,
                                            rotx, roty, rotz])
-                    self.val_RT.append([i, transl_x, transl_y, transl_z,
-                                         rotx, roty, rotz])
+                    self.val_RT.append([float(i), float(transl_x), float(transl_y), float(transl_z),
+                                         float(rotx), float(roty), float(rotz)])
 
             assert len(self.val_RT) == len(self.all_files), "Something wrong with test RTs"
 
