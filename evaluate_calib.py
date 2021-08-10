@@ -161,12 +161,9 @@ def main(_config, seed):
     else:
         if isinstance(_config['test_sequence'], int):
             _config['test_sequence'] = f"{_config['test_sequence']:02d}"
-        # dataset_val = dataset_class(_config['data_folder'], max_r=_config['max_r'], max_t=_config['max_t'],
-        #                             split=split, use_reflectance=_config['use_reflectance'],
-        #                             val_sequence=_config['test_sequence'])
         dataset_val = dataset_class(_config['data_folder'], max_r=_config['max_r'], max_t=_config['max_t'],
-                                    split='random', use_reflectance=_config['use_reflectance'],
-                                    test_sequence=_config['test_sequence'], est='rot')
+                                    split=split, use_reflectance=_config['use_reflectance'],
+                                    val_sequence=_config['test_sequence'])
 
     np.random.seed(seed)
     torch.random.manual_seed(seed)
