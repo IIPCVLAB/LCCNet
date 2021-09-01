@@ -1,11 +1,3 @@
-# -------------------------------------------------------------------
-# Copyright (C) 2020 Harbin Institute of Technology, China
-# Author: Xudong Lv (15B901019@hit.edu.cn)
-# Released under Creative Commons
-# Attribution-NonCommercial-ShareAlike 4.0 International License.
-# http://creativecommons.org/licenses/by-nc-sa/4.0/
-# -------------------------------------------------------------------
-
 import torch
 import torchvision
 import torchvision.transforms as transforms
