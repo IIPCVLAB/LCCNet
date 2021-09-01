@@ -1,3 +1,10 @@
+"""
+Original implementation of the PWC-DC network for optical flow estimation by Sun et al., 2018
+Jinwei Gu and Zhile Ren
+Modified version (CMRNet) by Daniele Cattaneo
+Modified version (LCCNet) by Xudong Lv
+"""
+
 import torch
 import torchvision
 import torchvision.transforms as transforms
