@@ -1,5 +1,12 @@
-# Author: Xudong Lv
-# based on github.com/cattaneod/CMRNet/blob/master/DatasetVisibilityKitti.py
+# -------------------------------------------------------------------
+# Copyright (C) 2020 Università degli studi di Milano-Bicocca, iralab
+# Author: Daniele Cattaneo (d.cattaneo10@campus.unimib.it)
+# Released under Creative Commons
+# Attribution-NonCommercial-ShareAlike 4.0 International License.
+# http://creativecommons.org/licenses/by-nc-sa/4.0/
+# -------------------------------------------------------------------
+
+# Modified Author: Xudong Lv# based on github.com/cattaneod/CMRNet/blob/master/DatasetVisibilityKitti.py
 
 import csv
 import os
