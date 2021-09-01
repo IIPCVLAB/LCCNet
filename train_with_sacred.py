@@ -1,3 +1,6 @@
+# Author: Xudong Lv
+# based on github.com/cattaneod/CMRNet/blob/master/main_visibility_CALIB.py
+
 import math
 import os
 import random
