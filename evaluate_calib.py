@@ -1,3 +1,6 @@
+# Author: Xudong Lv
+# based on github.com/cattaneod/CMRNet/blob/master/evaluate_iterative_single_CALIB.py
+
 import csv
 import random
 import open3d as o3
