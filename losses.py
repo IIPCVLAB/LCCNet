@@ -1,3 +1,6 @@
+# Author: Xudong Lv
+# based on github.com/cattaneod/CMRNet/blob/master/losses.pyy
+
 import torch
 from torch import nn as nn
 
