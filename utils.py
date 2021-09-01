@@ -1,3 +1,6 @@
+# Author: XUdong Lv
+# based on github.com/cattaneod/CMRNet/blob/master/utils.py
+
 import math
 
 import mathutils
