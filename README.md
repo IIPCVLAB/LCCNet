@@ -70,9 +70,8 @@ Thank you for citing our paper if you use any of this code or datasets.
 ### Acknowledgments
  We are grateful to Daniele Cattaneo for his CMRNet [github repository](https://github.com/cattaneod/CMRNet). We use it as our initial code base.
  
-[correlation_package](models/LCCNet/correlation_package) was taken from [flownet2](https://github.com/NVIDIA/flownet2-pytorch/tree/master/networks/correlation_package)
+<!-- [correlation_package](models/LCCNet/correlation_package) was taken from [flownet2](https://github.com/NVIDIA/flownet2-pytorch/tree/master/networks/correlation_package)
 
-[LCCNet.py](model/LCCNet.py) is a modified version of the original [PWC-DC network](https://github.com/NVlabs/PWC-Net/blob/master/PyTorch/models/PWCNet.py) and modified version [CMRNet](https://github.com/cattaneod/CMRNet/blob/master/models/CMRNet/CMRNet.py) 
-
+[LCCNet.py](model/LCCNet.py) is a modified version of the original [PWC-DC network](https://github.com/NVlabs/PWC-Net/blob/master/PyTorch/models/PWCNet.py) and modified version [CMRNet](https://github.com/cattaneod/CMRNet/blob/master/models/CMRNet/CMRNet.py)  -->
 
 ---
