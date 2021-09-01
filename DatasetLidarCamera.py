@@ -6,7 +6,8 @@
 # http://creativecommons.org/licenses/by-nc-sa/4.0/
 # -------------------------------------------------------------------
 
-# Modified Author: Xudong Lv# based on github.com/cattaneod/CMRNet/blob/master/DatasetVisibilityKitti.py
+# Modified Author: Xudong Lv
+# based on github.com/cattaneod/CMRNet/blob/master/DatasetVisibilityKitti.py
 
 import csv
 import os
