@@ -1,3 +1,6 @@
+# Author: Xudong Lv
+# based on github.com/cattaneod/CMRNet/blob/master/quaternion_distances.py
+
 import numpy as np
 import torch
 
