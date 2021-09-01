@@ -1,3 +1,6 @@
+# Author: Xudong Lv
+# based on github.com/cattaneod/CMRNet/blob/master/DatasetVisibilityKitti.py
+
 import csv
 import os
 from math import radians
