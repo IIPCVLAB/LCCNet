@@ -68,7 +68,7 @@ Thank you for citing our paper if you use any of this code or datasets.
 ```
 
 ### Acknowledgments
- We are grateful to Daniele Cattaneo for his [github repository](https://github.com/cattaneod/CMRNet). We use it as our initial code base.
+ We are grateful to Daniele Cattaneo for his CMRNet [github repository](https://github.com/cattaneod/CMRNet). We use it as our initial code base.
  
 [correlation_package](models/LCCNet/correlation_package) was taken from [flownet2](https://github.com/NVIDIA/flownet2-pytorch/tree/master/networks/correlation_package)
 
