@@ -1,4 +1,4 @@
-# Author: XUdong Lv
+# Author: Xudong Lv
 # based on github.com/cattaneod/CMRNet/blob/master/utils.py
 
 import math
