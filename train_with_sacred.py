@@ -158,7 +158,7 @@ def val(model, rgb_img, refl_img, target_transl, target_rot, loss_fn, point_clou
     # else:
     #     total_loss = loss_fn(point_clouds, target_transl, target_rot, transl_err, rot_err)
 
-    total_trasl_error = torch.tensor(0.0)
+    total_trasl_error = torch.tensor(0.0).to(transl_err.device)
     total_rot_error = quaternion_distance(target_rot, rot_err, target_rot.device)
     total_rot_error = total_rot_error * 180. / math.pi
     for j in range(rgb_img.shape[0]):
