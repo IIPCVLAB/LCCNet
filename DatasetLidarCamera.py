@@ -23,8 +23,8 @@ import torchvision.transforms.functional as TTF
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-
-from utils import invert_pose, rotate_forward, quaternion_from_matrix, read_calib_file
+from tqdm import tqdm
+from utils import invert_pose, rotate_forward, quaternion_from_matrix#, read_calib_file
 from pykitti import odometry
 import pykitti
 
@@ -50,8 +50,7 @@ class DatasetLidarCameraKittiOdometry(Dataset):
         self.suf = suf
 
         self.all_files = []
-        self.sequence_list = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10',
-                              '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21']
+        self.sequence_list = [f'{s:02}' for s in range(0, 21)]
         # self.model = CameraModel()
         # self.model.focal_length = [7.18856e+02, 7.18856e+02]
         # self.model.principal_point = [6.071928e+02, 1.852157e+02]
@@ -71,19 +70,17 @@ class DatasetLidarCameraKittiOdometry(Dataset):
             image_list = os.listdir(os.path.join(dataset_dir, 'sequences', seq, 'image_2'))
             image_list.sort()
 
-            for image_name in image_list:
-                if not os.path.exists(os.path.join(dataset_dir, 'sequences', seq, 'velodyne',
-                                                   str(image_name.split('.')[0])+'.bin')):
+            for image_name in tqdm(image_list, desc=f'Loading KITTI odometry dataset {seq}'):
+                if not os.path.exists(os.path.join(dataset_dir, 'sequences', seq, 'velodyne', str(image_name.split('.')[0])+'.bin')):
                     continue
-                if not os.path.exists(os.path.join(dataset_dir, 'sequences', seq, 'image_2',
-                                                   str(image_name.split('.')[0])+suf)):
+                if not os.path.exists(os.path.join(dataset_dir, 'sequences', seq, 'image_2', str(image_name.split('.')[0])+suf)):
                     continue
                 if seq == val_sequence:
                     if split.startswith('val') or split == 'test':
                         self.all_files.append(os.path.join(seq, image_name.split('.')[0]))
                 elif (not seq == val_sequence) and split == 'train':
                     self.all_files.append(os.path.join(seq, image_name.split('.')[0]))
-
+        assert self.all_files, 'No pcd files found'
         self.val_RT = []
         if split == 'val' or split == 'test':
             # val_RT_file = os.path.join(dataset_dir, 'sequences',
