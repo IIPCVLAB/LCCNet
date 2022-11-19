@@ -1,5 +1,14 @@
 scikit_image
-git+https://gitlab.com/m1lhaus/blender-mathutils.git
+git+https://gitlab.com/ideasman42/blender-mathutils.git
+# 会在Python3.8遇到两个问题：
+# 1. PyModule_AddType()函数在Python3.8中不存在，建议方案为改成以下方式
+#   PyModule_AddObject(mod, vector_Type.tp_name,     (PyObject *)&vector_Type);
+#	PyModule_AddObject(mod, matrix_Type.tp_name,     (PyObject *)&matrix_Type);
+#	PyModule_AddObject(mod, euler_Type.tp_name,      (PyObject *)&euler_Type);
+#	PyModule_AddObject(mod, quaternion_Type.tp_name, (PyObject *)&quaternion_Type);
+#	PyModule_AddObject(mod, color_Type.tp_name,      (PyObject *)&color_Type);
+# 2. y = _Py_HashDouble(NULL, (double)(array[i++])); 这里的NULL会报错，建议方案为将NULL删除
+# mathutils==2.81.2 # 早期版本可以安装，但是会出问题：ValueError: mathutils.Euler(): invalid euler order 'XYZ'
 tqdm==4.19.9
 pandas
 h5py
@@ -7,14 +16,18 @@ matplotlib
 scipy
 pyquaternion
 opencv-python
-cupy_cuda90==6.0.0
+# cupy_cuda90==6.0.0 # cuda11使用cupy-cuda11x
+cupy-cuda11x
 pykitti
 numpy
 tensorboardX
-open3d-python==0.7.0.0
+open3d-python
 Pillow
 scikit-image
-torch==1.0.1.post2
-torchvision==0.2.2
-sacred==0.7.4
--e ./models/correlation_package
+torch>=1.10.0
+torchvision>=0.11.0
+scared
+-e ./models/correlation_package --no-build-isolation
+# 注意，这里编译了一个本地库："correlation_package"(-e ./models/correlation_package)。
+# 因为pyproject.toml使用的torch文件比较古老，不能匹配本地cuda版本，同时会下载一个版本安装，会非常慢，
+# 因此我们这里使用pip install -e ./models/correlation_package --no-build-isolation 这个选项使得编译环境使用本地环境。

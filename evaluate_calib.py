@@ -26,8 +26,10 @@ import torch.nn.parallel
 import torch.utils.data
 from sacred import Experiment
 from sacred.utils import apply_backspaces_and_linefeeds
+from sacred import SETTINGS
+SETTINGS.CONFIG.READ_ONLY_CONFIG = False
 from skimage import io
-from tqdm import tqdm
+from tqdm import tqdm, trange
 import time
 
 from models.LCCNet import LCCNet
@@ -64,7 +66,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 @ex.config
 def config():
     dataset = 'kitti/odom'
-    data_folder = '/home/wangshuo/Datasets/KITTI/odometry_color/'
+    data_folder = './kitti_odometry_color/dataset/'
     test_sequence = 0
     use_prev_output = False
     max_t = 1.5
@@ -80,22 +82,22 @@ def config():
     # Set to True only if you use two network, the first for rotation and the second for translation
     rot_transl_separated = False
     random_initial_pose = False
-    save_log = False
+    save_log = True
     dropout = 0.0
     max_depth = 80.
     iterative_method = 'multi_range' # ['multi_range', 'single_range', 'single']
-    output = '../output'
+    output = './output'
     save_image = False
     outlier_filter = True
     outlier_filter_th = 10
     out_fig_lg = 'EN' # [EN, CN]
 
 weights = [
-   './pretrained/kitti_iter1.tar',
-   './pretrained/kitti_iter2.tar',
-   './pretrained/kitti_iter3.tar',
-   './pretrained/kitti_iter4.tar',
-   './pretrained/kitti_iter5.tar',
+   './LCCNet_pretrained/kitti_iter1.tar',
+   './LCCNet_pretrained/kitti_iter2.tar',
+   './LCCNet_pretrained/kitti_iter3.tar',
+   './LCCNet_pretrained/kitti_iter4.tar',
+   './LCCNet_pretrained/kitti_iter5.tar',
 ]
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -174,7 +176,7 @@ def main(_config, seed):
     def init_fn(x):
         return _init_fn(x, seed)
 
-    num_worker = 6
+    num_worker = 8
     batch_size = 1
 
     TestImgLoader = torch.utils.data.DataLoader(dataset=dataset_val,
@@ -189,7 +191,7 @@ def main(_config, seed):
     print(len(TestImgLoader))
 
     models = [] # iterative model
-    for i in range(len(weights)):
+    for weight in tqdm(weights, desc='Loading weights'):
         # network choice and settings
         if _config['network'].startswith('Res'):
             feat = 1
@@ -207,7 +209,7 @@ def main(_config, seed):
         else:
             raise TypeError("Network unknown")
 
-        checkpoint = torch.load(weights[i], map_location='cpu')
+        checkpoint = torch.load(weight, map_location='cpu')
         saved_state_dict = checkpoint['state_dict']
         model.load_state_dict(saved_state_dict)
         model = model.to(device)
@@ -216,8 +218,8 @@ def main(_config, seed):
 
 
     if _config['save_log']:
+        os.makedirs('results_for_paper', exist_ok=True)
         log_file = f'./results_for_paper/log_seq{_config["test_sequence"]}.csv'
-        log_file = open(log_file, 'w')
         log_file = csv.writer(log_file)
         header = ['frame']
         for i in range(len(weights) + 1):
@@ -321,12 +323,12 @@ def main(_config, seed):
 
             if _config['save_image']:
                 # save the Lidar pointcloud
-                pcl_lidar = o3.PointCloud()
+                pcl_lidar = o3.geometry.PointCloud()
                 pc_lidar = pc_lidar.detach().cpu().numpy()
-                pcl_lidar.points = o3.Vector3dVector(pc_lidar.T[:, :3])
+                pcl_lidar.points = o3.utility.Vector3dVector(pc_lidar.T[:, :3])
 
                 # o3.draw_geometries(downpcd)
-                o3.write_point_cloud(pc_lidar_path + '/{}.pcd'.format(batch_idx), pcl_lidar)
+                o3.io.write_point_cloud(pc_lidar_path + '/{}.pcd'.format(batch_idx), pcl_lidar)
 
 
             R = quat2mat(sample['rot_error'][idx])
@@ -353,12 +355,12 @@ def main(_config, seed):
                 R = img[uv_input[:, 1], uv_input[:, 0], 0] / 255
                 G = img[uv_input[:, 1], uv_input[:, 0], 1] / 255
                 B = img[uv_input[:, 1], uv_input[:, 0], 2] / 255
-                pcl_input = o3.PointCloud()
-                pcl_input.points = o3.Vector3dVector(pc_input_valid[:, :3])
-                pcl_input.colors = o3.Vector3dVector(np.vstack((R, G, B)).T)
+                pcl_input = o3.geometry.PointCloud()
+                pcl_input.points = o3.utility.Vector3dVector(pc_input_valid[:, :3])
+                pcl_input.colors = o3.utility.Vector3dVector(np.vstack((R, G, B)).T)
 
                 # o3.draw_geometries(downpcd)
-                o3.write_point_cloud(pc_input_path + '/{}.pcd'.format(batch_idx), pcl_input)
+                o3.io.write_point_cloud(pc_input_path + '/{}.pcd'.format(batch_idx), pcl_input)
 
             # PAD ONLY ON RIGHT AND BOTTOM SIDE
             rgb = sample['rgb'][idx].cuda()
@@ -384,8 +386,8 @@ def main(_config, seed):
 
         lidar_input = torch.stack(lidar_input)
         rgb_input = torch.stack(rgb_input)
-        rgb_resize = F.interpolate(rgb_input, size=[256, 512], mode="bilinear")
-        lidar_resize = F.interpolate(lidar_input, size=[256, 512], mode="bilinear")
+        rgb_resize = F.interpolate(rgb_input, size=[256, 512], mode="bilinear", align_corners=True)
+        lidar_resize = F.interpolate(lidar_input, size=[256, 512], mode="bilinear", align_corners=True)
 
 
         if _config['save_image']:
@@ -475,7 +477,7 @@ def main(_config, seed):
                 depth_img_pred /= _config['max_depth']
                 depth_pred = F.pad(depth_img_pred, shape_pad_input[0])
                 lidar = depth_pred.unsqueeze(0)
-                lidar_resize = F.interpolate(lidar, size=[256, 512], mode="bilinear")
+                lidar_resize = F.interpolate(lidar, size=[256, 512], mode="bilinear", align_corners=True)
 
                 if iteration == len(weights)-1 and _config['save_image']:
                     # save the RGB pointcloud
@@ -483,12 +485,12 @@ def main(_config, seed):
                     R = img[uv_pred[:, 1], uv_pred[:, 0], 0] / 255
                     G = img[uv_pred[:, 1], uv_pred[:, 0], 1] / 255
                     B = img[uv_pred[:, 1], uv_pred[:, 0], 2] / 255
-                    pcl_pred = o3.PointCloud()
-                    pcl_pred.points = o3.Vector3dVector(pc_pred_valid[:, :3])
-                    pcl_pred.colors = o3.Vector3dVector(np.vstack((R, G, B)).T)
+                    pcl_pred = o3.geometry.PointCloud()
+                    pcl_pred.points = o3.utility.Vector3dVector(pc_pred_valid[:, :3])
+                    pcl_pred.colors = o3.utility.Vector3dVector(np.vstack((R, G, B)).T)
 
                     # o3.draw_geometries(downpcd)
-                    o3.write_point_cloud(pc_pred_path + '/{}.pcd'.format(batch_idx), pcl_pred)
+                    o3.io.write_point_cloud(pc_pred_path + '/{}.pcd'.format(batch_idx), pcl_pred)
 
 
                 if _config['save_image']:
@@ -537,10 +539,9 @@ def main(_config, seed):
     # mis_calib_input[transl_x, transl_y, transl_z, rotx, roty, rotz] Nx6
     mis_calib_input = torch.stack(mis_calib_list)[:, :, 0]
 
-    if _config['save_log']:
-        log_file.close()
+
     print("Iterative refinement: ")
-    for i in range(len(weights) + 1):
+    for i in trange(len(weights) + 1, desc='Iterative refinement'):
         errors_r[i] = torch.tensor(errors_r[i]).abs() * (180.0 / 3.141592)
         errors_t[i] = torch.tensor(errors_t[i]).abs() * 100
 
